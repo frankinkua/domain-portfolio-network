@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">Domain Portfolio Network</title>
+  <meta name="description" id="page-description" content="Official landing destination and registry network.">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent: #38bdf8;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+    .glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .card {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      padding: 3rem 2.5rem;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      word-break: break-word;
+    }
+    .tagline {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .info-box {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.35rem 0;
+      font-size: 0.875rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--text-muted); }
+    .info-val { font-weight: 500; font-family: monospace; color: var(--text); }
+    .footer {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 1rem;
+    }
+    .footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="glow" id="glow-effect"></div>
+  <main class="card">
+    <div class="badge" id="category-badge">Network Property</div>
+    <h1 id="domain-display">Domain Network</h1>
+    <p class="tagline" id="domain-description">
+      This property is part of Frank's digital portfolio network, secured by Cloudflare edge acceleration.
+    </p>
+
+    <div class="info-box">
+      <div class="info-row">
+        <span class="info-label">Host</span>
+        <span class="info-val" id="host-val">localhost</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Vertical</span>
+        <span class="info-val" id="vertical-val">General Brand</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">DNS Routing</span>
+        <span class="info-val" id="routing-val">Cloudflare Enterprise Edge &rarr; GitHub Pages</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Security & TLS</span>
+        <span class="info-val">Strict Universal SSL</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      Powered by <a href="https://github.com/frankinkua" target="_blank" rel="noopener">InkuA Swarm Infrastructure</a>
+    </div>
+  </main>
+
+  <script>
+    (async function init() {
+      const hostname = window.location.hostname.toLowerCase();
+      document.getElementById('host-val').textContent = hostname;
+      document.getElementById('domain-display').textContent = hostname;
+      document.title = `${hostname} | Domain Network`;
+
+      try {
+        const resp = await fetch('domains.json');
+        if (!resp.ok) return;
+        const data = await resp.json();
+        
+        let match = data.domains[hostname];
+        if (!match) {
+          const stripped = hostname.replace(/^www\./, '');
+          match = data.domains[stripped];
+        }
+
+        if (match) {
+          const vInfo = data.verticals[match.vertical];
+          if (vInfo) {
+            document.getElementById('category-badge').textContent = vInfo.category;
+            document.getElementById('vertical-val').textContent = vInfo.title;
+            document.getElementById('domain-description').textContent = vInfo.description;
+            document.getElementById('page-description').content = vInfo.description;
+            
+            // vertical styling adjustments
+            if (match.vertical === 'cannabis') {
+              document.documentElement.style.setProperty('--accent', '#10b981');
+              document.getElementById('glow-effect').style.background = 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(0, 0, 0, 0) 70%)';
+            } else if (match.vertical === 'metaverse_web3') {
+              document.documentElement.style.setProperty('--accent', '#a855f7');
+              document.getElementById('glow-effect').style.background = 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(0, 0, 0, 0) 70%)';
+            } else if (match.vertical === 'archives_education') {
+              document.documentElement.style.setProperty('--accent', '#f59e0b');
+              document.getElementById('glow-effect').style.background = 'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(0, 0, 0, 0) 70%)';
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Metadata loader:', err);
+      }
+    })();
+  </script>
+</body>
+</html>
