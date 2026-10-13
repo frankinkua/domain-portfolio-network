@@ -1,18 +1,8 @@
-# Domain Portfolio Network
+# Domain Portfolio Placeholder (`frankinkua.github.io`)
 
-Headless, multi-tenant landing engine powering Frank's 300+ domain portfolio on GitHub Pages, backed by Cloudflare DNS and edge acceleration.
+User-level GitHub Pages repository serving a uniform, zero-data **"Work in Progress"** landing page across all delegated portfolio domains.
 
 ## Architecture
 
-- **Multi-Tenant Router:** `index.html` inspects `window.location.hostname` dynamically, mapping it to vertical metadata from `domains.json` in sub-10ms with zero server cost.
-- **Edge Routing:** Cloudflare zones proxy traffic (`CNAME @ -> frankinkua.github.io`) with SSL/TLS edge encryption.
-- **Registrar:** Delegated via united-domains customer portal.
-
-## Vertical Catalog
-
-- **German Cannabis & Lifestyle:** Cannabis Social Clubs, dispensary guides, regional culture.
-- **AI & Advanced Robotics:** Edge intelligence, swarm nodes, physical autonomy showcase.
-- **Education & Career Archives:** Aged youth archives (`azubiarchiv.de`, `studentenarchiv.de`, etc.).
-- **Metaverse & Web3:** Spatial computing, virtual platforms.
-- **Mobility & Transit:** Ride coordination, transport services.
-- **Interactive Media:** Soundtracks, audio synthesis, video hubs.
+- **Root GitHub Pages (`frankinkua.github.io`):** Serves `index.html` and `404.html` directly at `/` with zero domain/owner metadata or external data dependencies.
+- **Edge Routing:** Portfolio zones on Cloudflare proxy `@` and `www` (`CNAME -> dd6f0a19-2dde-42ed-bfad-295b586b461f.cfargotunnel.com`) which rewrites the origin `Host` header to `frankinkua.github.io` over HTTPS, allowing unlimited custom domains to resolve cleanly with HTTP 200 and Universal SSL.

@@ -1,6 +1,6 @@
 #!/bin/bash
-# Complete Remaining .de Provisioning & Nameserver Delegation Script
-# Reads CF_TOKEN and UD_COOKIE from environment or ~/.config/cloudflare-admin.env
+# Complete Remaining Domain Provisioning & Nameserver Delegation Script
+# Reads CLOUDFLARE_API_TOKEN, UD_COOKIE, and UD_CSRF from environment or ~/.config/cloudflare-admin.env
 
 set -e
 
@@ -14,15 +14,13 @@ if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
     exit 1
 fi
 
-CF_ACCOUNT="bfaa8f7dcb70a45d5af13f6c1a3843a2"
-
-echo "=== Processing remaining .de domains ==="
+echo "=== Processing remaining portfolio domains ==="
 python3 - <<'EOF'
 import os, json, time, urllib.request, urllib.error
 
 rem_file = "/home/frank/remaining_de_domains.json"
 if not os.path.exists(rem_file):
-    print("No remaining .de domains file found.")
+    print("No remaining domains file found.")
     exit(0)
 
 with open(rem_file) as f:
@@ -36,6 +34,7 @@ did_map = {d["domain"]: d["id"] for d in pf_domains}
 cf_token = os.environ.get("CLOUDFLARE_API_TOKEN")
 cf_account = "bfaa8f7dcb70a45d5af13f6c1a3843a2"
 cf_headers = {"Authorization": f"Bearer {cf_token}", "Content-Type": "application/json"}
+tunnel_target = "dd6f0a19-2dde-42ed-bfad-295b586b461f.cfargotunnel.com"
 
 ud_cookie = os.environ.get("UD_COOKIE", "")
 ud_csrf = os.environ.get("UD_CSRF", "")
@@ -62,6 +61,7 @@ for idx, dname in enumerate(remaining):
     cf_req = urllib.request.Request(cf_url, data=cf_payload, headers=cf_headers)
     
     assigned_ns = None
+    zone_id = None
     try:
         with urllib.request.urlopen(cf_req) as r:
             cf_data = json.loads(r.read().decode("utf-8"))["result"]
@@ -81,10 +81,23 @@ for idx, dname in enumerate(remaining):
             still_remaining.append(dname)
             continue
             
-    if not assigned_ns:
+    if not assigned_ns or not zone_id:
         still_remaining.append(dname)
         continue
         
+    # Ensure DNS CNAME records point to edge tunnel
+    rec_url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records"
+    for sub in ("@", "www"):
+        try:
+            rec_payload = {"type": "CNAME", "name": sub, "content": tunnel_target, "ttl": 1, "proxied": True}
+            urllib.request.urlopen(urllib.request.Request(rec_url, data=json.dumps(rec_payload).encode("utf-8"), headers=cf_headers, method="POST"))
+        except Exception:
+            pass
+
+    if not ud_cookie or not ud_csrf:
+        still_remaining.append(dname)
+        continue
+
     time.sleep(1)
     
     # Update united-domains
@@ -112,12 +125,6 @@ for idx, dname in enumerate(remaining):
         with urllib.request.urlopen(ud_req) as resp:
             success += 1
             print(f"[{idx+1}/{len(remaining)}] Updated {dname} -> {assigned_ns}")
-            # Add DNS CNAME to GitHub Pages
-            rec_url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records"
-            add_root = {"type": "CNAME", "name": "@", "content": "frankinkua.github.io", "ttl": 1, "proxied": True}
-            add_www = {"type": "CNAME", "name": "www", "content": "frankinkua.github.io", "ttl": 1, "proxied": True}
-            urllib.request.urlopen(urllib.request.Request(rec_url, data=json.dumps(add_root).encode("utf-8"), headers=cf_headers, method="POST"))
-            urllib.request.urlopen(urllib.request.Request(rec_url, data=json.dumps(add_www).encode("utf-8"), headers=cf_headers, method="POST"))
     except Exception as e:
         still_remaining.append(dname)
 
